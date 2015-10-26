@@ -1,0 +1,71 @@
+import numpy as np
+from scipy.cluster.vq import kmeans, vq
+
+
+def get_bottom_bond(y):
+    rg=[]
+    codebook, _ = kmeans(y, 3)  # three clusters
+    cluster_indices, _ = vq(y, codebook)
+    print (y)
+    #print ('cluster 1\n')
+    #print (y[cluster_indices==0])
+    #for indic in cluster_indices:
+    if len(y[cluster_indices==0]) > (sample_len / 6):
+        first_bar = float(sum(y[cluster_indices==0])/ len(y[cluster_indices==0]))
+        #print ("hl",first_bar)
+        rg.append(first_bar)
+    if len(y[cluster_indices==1]) > (sample_len / 6):
+        second_bar = float(sum(y[cluster_indices==1])/ len(y[cluster_indices==1]))
+        #print ("h2",second_bar)
+        rg.append(second_bar)
+    if len(y[cluster_indices==2]) > (sample_len / 6):
+        third_bar = float(sum(y[cluster_indices==2])/ len(y[cluster_indices==2]))
+        #print ("h3",third_bar)
+        rg.append(third_bar)
+    #print ('cluster 2\n')
+    #print (y[cluster_indices==1])
+    #print ('cluster 3\n')
+    #print (y[cluster_indices==2])
+    print ('rang',rg)
+    top_limit = max(rg)
+    bottom_limit = min(rg)
+    print ("toper limit",top_limit)
+    print ("toper bottom", bottom_limit)
+    return bottom_limit
+
+step_len = 5
+sample_len = 20
+try:
+    with open('data2.txt') as f:
+        lines = f.read().splitlines()
+        line =[]
+        for x in lines:
+            if x != 'null':
+                line.append(float(x))
+except IOError:
+    print ('No such file exist')
+    exit
+x = np.array(line)
+y_total = x.astype(float)
+y1=y_total[-sample_len:]
+bottom_limit_left = get_bottom_bond(y1)
+print ('left_bond',bottom_limit_left)
+start_point = 0
+percentage_array=[]
+for start_point in range(0,len(y_total),step_len):
+    y=y_total[start_point:start_point+sample_len]
+    if len(y) > 16 :
+        bottom_limit_right = get_bottom_bond(y)
+        #print (bottom_limit_right)
+        percentage_array.append(abs((bottom_limit_right-bottom_limit_left)*100/bottom_limit_left))
+       # if abs((bottom_limit_right-bottom_limit_left)*100/bottom_limit_left) > 1 :
+        #    print ("droped = ""{0:.3f}%".format(((bottom_limit_right-bottom_limit_left)*100/bottom_limit_left)))
+        #else:
+        #    print ("no drop = " "{0:.3f}%".format(((bottom_limit_right-bottom_limit_left)*100/bottom_limit_left)))
+
+max_drop = max(percentage_array)
+print(percentage_array)
+if max_drop > 1 :
+    print ("droped = ""{0:.3f}%".format(max_drop))
+else:
+    print ("no drop = " "{0:.3f}%".format(max_drop))

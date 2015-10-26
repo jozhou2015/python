@@ -1,0 +1,1136 @@
+!
+!
+!
+!
+!
+!
+!
+spanning-tree extend system-id
+!
+!
+redundancy
+ mode sso
+!
+!
+!
+!
+!
+cdp run
+!
+!
+class-map match-all telnet
+ match access-group 105
+class-map match-all http
+ match access-group 101
+class-map match-all all-ip
+ match access-group 103
+class-map match-all ssh
+ match access-group 102
+class-map match-all iperf
+ match access-group 104
+class-map match-all cap
+ match access-group 123
+!
+policy-map type service-chain demo
+ class http
+  forward service-path 1 service-index 2
+ class ssh
+  forward service-path 2 service-index 4
+ class telnet
+  forward service-path 5 service-index 4
+ class iperf
+  forward service-path 3 service-index 2
+ class all-ip
+  pass-through
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+service-chain service-function-forwarder local
+  ip address 21.222.10.1
+service-chain service-function-forwarder a10
+  description "service-function-forwarder_a10"
+service-chain service-function-forwarder a20
+  description "service-function-forwarder_a20"
+  ip address 21.222.20.1
+service-chain service-function-forwarder a30
+  description "service-function-forwarder_a30"
+  ip address 21.222.30.1
+service-chain service-function-forwarder a40
+  description "service-function-forwarder_a40"
+  ip address 21.222.40.1
+service-chain service-function-forwarder a50
+  description "service-function-forwarder_a50"
+  ip address 21.222.50.1
+!
+service-chain service-function ip23
+  description "service-function_ip23"
+  ip address 21.0.0.23
+  encapsulation gre
+service-chain service-function ip24
+  description "service-function_ip24"
+  ip address 21.0.0.24
+  encapsulation gre
+service-chain service-function ip25
+  description "service-function_ip25"
+  ip address 21.0.0.25
+  encapsulation gre
+service-chain service-function ip26
+  description "service-function_ip26"
+  ip address 21.0.0.26
+  encapsulation gre
+service-chain service-function ip27
+  description "service-function_ip27"
+  ip address 21.0.0.27
+  encapsulation gre
+!
+service-chain service-path 0
+  description service_path_0
+service-chain service-path 1
+  service-index 4 service-function-forwarder a40
+  service-index 3 service-function-forwarder a10
+  service-index 2 service-function ip25
+service-chain service-path 2
+  service-index 4 service-function-forwarder a10
+  service-index 3 service-function ip24
+  service-index 2 service-function ip25
+service-chain service-path 3
+  service-index 4 service-function-forwarder a10
+  service-index 3 service-function ip24
+  service-index 2 service-function-forwarder a30
+service-chain service-path 5
+  service-index 4 service-function-forwarder a10
+  service-index 3 service-function ip23
+  service-index 2 service-function ip25
+service-chain service-path 6
+  service-index 2 service-function ip25
+service-chain service-path 7
+  service-index 2 service-function-forwarder a10
+service-chain service-path 8
+  service-index 2 service-function-forwarder a10
+!
+!
+!
+!
+!
+interface TenGigabitEthernet0/0/0
+ no ip address
+ shutdown
+!
+interface TenGigabitEthernet0/2/0
+ no ip address
+ shutdown
+!
+interface TenGigabitEthernet0/3/0
+ no ip address
+ shutdown
+!
+interface TenGigabitEthernet1/1/0
+ description second input
+ ip address 11.222.10.1 255.255.255.0
+ cdp enable
+ service-policy type service-chain input demo
+!
+interface TenGigabitEthernet1/3/0
+ no ip address
+ shutdown
+!
+interface TenGigabitEthernet2/0/0
+ mtu 9216
+ ip address 21.222.10.1 255.0.0.0
+ ip policy route-map WAAS
+ cdp enable
+!
+interface TenGigabitEthernet2/1/0
+ no ip address
+ shutdown
+!
+interface TenGigabitEthernet2/2/0
+ no ip address
+ shutdown
+!
+interface TenGigabitEthernet2/3/0
+ no ip address
+ shutdown
+!
+interface GigabitEthernet0
+ vrf forwarding Mgmt-intf
+ ip address 2.77.254.90 255.255.255.0
+ negotiation auto
+ cdp enable
+!
+ip local policy route-map WAAS
+ip forward-protocol nd
+!
+ip ftp source-interface GigabitEthernet0
+ip ftp username admin
+ip ftp password default
+no ip http server
+no ip http secure-server
+ip tftp source-interface GigabitEthernet0
+ip route 31.0.0.0 255.0.0.0 21.222.40.1
+ip route vrf Mgmt-intf 0.0.0.0 0.0.0.0 2.77.254.1
+!
+ip access-list extended WAAS
+ permit udp any any eq 5787
+!
+access-list 101 permit tcp any any eq www
+access-list 101 permit tcp any eq www any
+access-list 102 permit tcp any any eq 54
+access-list 102 permit tcp any any eq 22
+access-list 103 permit ip any any
+access-list 104 permit tcp any any eq 8080
+access-list 104 permit tcp any eq 8080 any
+access-list 105 permit tcp any any eq 222
+access-list 105 permit tcp any eq 222 any
+!
+!
+!
+control-plane
+!
+ !
+ !
+ !
+ !
+!
+!
+!
+!
+alias exec shell req plat soft sys sh f0
+alias exec cfgdiff show arch conf diff nvram:startup-config system:running-config
+alias exec stats show plat soft appnav f0 g
+alias exec cstat clear plat soft appnav f0 g
+alias exec drops show plat h q a st dr
+!
+line con 0
+ exec-timeout 0 0
+ stopbits 1
+line vty 0 4
+ login
+!
+!
+end
+
+NTT-Client#
+NTT-Client#
+NTT-Client#
+NTT-Client#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+NTT-Client(config)#platform
+NTT-Client(config)#platform  shell
+NTT-Client(config)#
+NTT-Client#$ion feature service-chain dataplane submode all level ver
+NTT-Client#debug plat cond feat service-chain controlplane level info
+NTT-Client#$ion feature appnav dataplane submode pkt-path level info
+NTT-Client#debug platform condition ingress
+NTT-Client#debug platform condition start
+Please remember to add debug conditions by 'debug platform condition ipv4/feature/...' for Conditional Debugging to work
+NTT-Client#req
+NTT-Client#request pla
+NTT-Client#request platform so
+NTT-Client#request platform software ?
+  console           Request console actions
+  package           Request package actions
+  process           Request process actions
+  shell             Request shell actions
+  snapshot          Request snapshot actions
+  system            Request system actions
+  trace             Request trace actions
+  virtual-instance  Request virtual-instance actions
+  vty               Request vty actions
+
+NTT-Client#request platform software sys
+NTT-Client#request platform software system sh
+NTT-Client#request platform software system shell f1
+Activity within this shell can jeopardize the functioning of the system.
+Are you sure you want to continue? [y/n] y
+2015/09/11 15:08:56 : Shell access was granted to user <anon>; Trace file: , /harddisk/tracelogs/system_shell_F1.log.20150911150856
+**********************************************************************
+Activity within this shell can jeopardize the functioning
+of the system.
+Use this functionality only under supervision of Cisco Support.
+
+Session will be logged to:
+  harddisk:tracelogs/system_shell_F1.log.20150911150856
+**********************************************************************
+Terminal type 'network' unknown.  Assuming vt100
+[NTT-Client_ESP_1:/]$ cd /tmp
+[NTT-Client_ESP_1:/tmp]$ cd fp
+[NTT-Client_ESP_1:/tmp/fp]$ cd trace
+[NTT-Client_ESP_1:/tmp/fp/trace]$ ls
+bexecute.sh-12064_F1-0.log                cpp_stats_svr_pmanlog_F1-0.log
+brelay-12060_F1-0.log                     emd_F1-0.log
+btrace_rotate_sh_F1-0.log                 emd_pmanlog_F1-0.log
+btrace_rotate_sh_pmanlog_F1-0.log         fifo
+cman_fp_F1-0.log                          fman-fp_F1-0.log
+cman_fp_pmanlog_F1-0.log                  fman_fp_image_pmanlog_F1-0.log
+cpp_cdm_F1-0.log                          hman_F1-0.log
+cpp_cdm_svr_pmanlog_F1-0.log              hman_pmanlog_F1-0.log
+cpp_cp_F1-0.log                           in.telnetd-11941_F1-0.log
+cpp_cp_svr_pmanlog_F1-0.log               inst_issu_switchover_F1-0.log
+cpp_driver-0_F1-0.log                     oom_F1-0.log
+cpp_driver_pmanlog_F1-0.log               plogd_F1-0.log
+cpp_ha_F1-0.log                           plogd_pmanlog_F1-0.log
+cpp_ha_top_level_server_pmanlog_F1-0.log  pvp_F1-0.log
+cpp_sp_F1-0.log                           rpid
+cpp_sp_svr_pmanlog_F1-0.log               stage
+cpp_stats_F1-0.log
+[NTT-Client_ESP_1:/tmp/fp/trace]$ tail -f cpp_cp_F1-0.log
+09/11 14:38:06.042 [tdllib]: [8762]: (note): epoch file read /tmp/tdlresolve/epoch_dir/active
+
+09/11 14:38:06.048 [trccfg]: [8762]: (note): Empty trace conf file
+09/11 14:38:06.048 [trccfg]: [8762]: (note): Processing all-modules
+09/11 15:08:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:08:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:08:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:08:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:08:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:08:45.669 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:09:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:09:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:09:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:09:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:09:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:09:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:10:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:10:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:10:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:10:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:10:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:10:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:11:45.666 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:11:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:11:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:11:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:11:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:11:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:12:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:12:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:12:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:12:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:12:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:12:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:13:45.666 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:13:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:13:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:13:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:13:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:13:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:14:45.666 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:14:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:14:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:14:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:14:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:14:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:15:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:15:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:15:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:15:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:15:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:15:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:45.667 [buginf]: [8762]: (debug): (info) hw class 8:6996976:7322369 0x90ca1400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:502145 0x90ca1420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:11625537 0x90ca1440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:5885361 0x90ca1460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:45.668 [buginf]: [8762]: (debug): (info) hw class 8:6996976:3932273 0x90ca1480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:45.669 [buginf]: [8762]: (debug): (info) hw class 8:6996976:1593 0x90ca14a0 refcount (0) delete_flag (FALSE) to be freed.^C
+[NTT-Client_ESP_1:/tmp/fp/trace]$ tail -f cpp_cp_F1-0.log
+[NTT-Client_ESP_1:/tmp/fp/trace]$ exitSession log harddisk:tracelogs/system_shell_F1.log.20150911150856 closed.
+NTT-Client#request platform software system shell f0
+Activity within this shell can jeopardize the functioning of the system.
+Are you sure you want to continue? [y/n] y
+2015/09/11 15:17:43 : Shell access was granted to user <anon>; Trace file: , /harddisk/tracelogs/system_shell_F0.log.20150911151743
+**********************************************************************
+Activity within this shell can jeopardize the functioning
+of the system.
+Use this functionality only under supervision of Cisco Support.
+
+Session will be logged to:
+  harddisk:tracelogs/system_shell_F0.log.20150911151743
+**********************************************************************
+Terminal type 'network' unknown.  Assuming vt100
+[NTT-Client_ESP_0:/]$ cd /tmp/fp/trace
+[NTT-Client_ESP_0:/tmp/fp/trace]$ ls
+bexecute.sh-16429_F0-0.log                cpp_stats_svr_pmanlog_F0-0.log
+brelay-16425_F0-0.log                     emd_F0-0.log
+btrace_rotate_sh_F0-0.log                 emd_pmanlog_F0-0.log
+btrace_rotate_sh_pmanlog_F0-0.log         fifo
+cman_fp_F0-0.log                          fman-fp_F0-0.log
+cman_fp_pmanlog_F0-0.log                  fman_fp_image_pmanlog_F0-0.log
+cpp_cdm_F0-0.log                          hman_F0-0.log
+cpp_cdm_svr_pmanlog_F0-0.log              hman_pmanlog_F0-0.log
+cpp_cp_F0-0.log                           in.telnetd-16306_F0-0.log
+cpp_cp_svr_pmanlog_F0-0.log               inst_issu_switchover_F0-0.log
+cpp_driver-0_F0-0.log                     oom_F0-0.log
+cpp_driver_pmanlog_F0-0.log               plogd_F0-0.log
+cpp_ha_F0-0.log                           plogd_pmanlog_F0-0.log
+cpp_ha_top_level_server_pmanlog_F0-0.log  pvp_F0-0.log
+cpp_sp_F0-0.log                           rpid
+cpp_sp_svr_pmanlog_F0-0.log               stage
+cpp_stats_F0-0.log
+[NTT-Client_ESP_0:/tmp/fp/trace]$ tail -f cpp_cp_F0-0.log
+09/11 15:16:26.002 [buginf]: [8951]: (debug): (info) hw class 8:6996976:11625537 0x8d276440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:26.003 [buginf]: [8951]: (debug): (info) hw class 8:6996976:5885361 0x8d276460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:26.003 [buginf]: [8951]: (debug): (info) hw class 8:6996976:3932273 0x8d276480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:16:26.003 [buginf]: [8951]: (debug): (info) hw class 8:6996976:1593 0x8d2764a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:17:26.001 [buginf]: [8951]: (debug): (info) hw class 8:6996976:7322369 0x8d276400 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:17:26.001 [buginf]: [8951]: (debug): (info) hw class 8:6996976:502145 0x8d276420 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:17:26.001 [buginf]: [8951]: (debug): (info) hw class 8:6996976:11625537 0x8d276440 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:17:26.002 [buginf]: [8951]: (debug): (info) hw class 8:6996976:5885361 0x8d276460 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:17:26.002 [buginf]: [8951]: (debug): (info) hw class 8:6996976:3932273 0x8d276480 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:17:26.002 [buginf]: [8951]: (debug): (info) hw class 8:6996976:1593 0x8d2764a0 refcount (0) delete_flag (FALSE) to be freed.
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573379198 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573424388 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): svc_chain_flow_find_or_add() CFT flow not found: Flow creation prevented by client
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573460875 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow not found, Calling Classification
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573495018 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 1
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573566550 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573616825 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): FO created, update FO fields
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573645455 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 1
+09/11 15:18:13.008 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573688748 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573718098 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_save_flow_states
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573749120 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Saving Input Intf 1023
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573785275 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Saving VRF id 0
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573817528 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573849833 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573888850 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442573934383 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442574002328 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442574957798 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575007863 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575058125 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575093765 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.009 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575122895 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.010 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575155703 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.010 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575193388 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.010 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575238390 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.011 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442575303840 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.011 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442576914260 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.011 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442576970340 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.011 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442577019660 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.011 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442577054515 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.011 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442577084315 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442577117150 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442577156175 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442577204448 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442577275713 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577033995 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577085885 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577137475 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577172385 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577201760 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577236385 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577275840 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577320928 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.012 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:129 TS:00000002442577388168 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577143453 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577193593 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577245265 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577279545 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577307683 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577340603 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577380440 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577425990 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:030 TS:00000002442577491848 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577259655 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577310123 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577362178 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577397860 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577425488 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.013 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577455548 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577496348 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577543180 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:024 TS:00000002442577609868 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577374343 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577424225 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577475280 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577509493 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577537390 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577570865 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577608940 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577653875 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442577719993 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577489598 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.014 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577539265 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577589245 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577624325 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577653200 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577686013 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577723933 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577768745 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:072 TS:00000002442577834270 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577602110 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577652243 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577703275 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577738880 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577766743 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577800118 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.015 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577839378 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577885020 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442577950425 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577717450 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577767913 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577816423 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577850960 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577878825 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577910215 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577951048 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442577998900 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:053 TS:00000002442578066595 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442577834398 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442577884218 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442577935758 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442577971045 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.016 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442577999463 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442578030523 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442578069883 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442578116783 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:147 TS:00000002442578184443 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442577949250 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578000865 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578052460 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578090875 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578120665 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578154938 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578197005 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578246138 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442578317370 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.017 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578064238 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578116238 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578171273 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578208970 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578239230 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578271943 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578314683 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578363933 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442578430305 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578180283 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578231873 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578283358 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578319663 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578347950 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578380555 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.018 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578420723 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578466953 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442578534668 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578294988 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578344168 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578395673 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578429905 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578459345 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578491515 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578529398 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578575065 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:066 TS:00000002442578641995 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578413183 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578463813 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.019 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578514643 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578548895 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578576675 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578607090 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578646143 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578692685 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442578761773 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578524545 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578575283 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578625468 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578659770 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578687593 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578717775 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578757463 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.020 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578803863 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:018 TS:00000002442578872843 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578639598 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578689295 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578739690 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578774035 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578803345 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578836220 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578874095 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578920808 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442578987748 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442578755080 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442578806143 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442578855775 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442578890123 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.021 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442578919293 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442578952173 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442578990525 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442579037005 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442579105488 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442578873493 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442578923863 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442578975213 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579012478 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579041620 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579074970 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579115395 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579162225 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.022 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579232135 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442578985305 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579036250 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579086255 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579122045 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579150155 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579181565 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579221118 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579268240 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:087 TS:00000002442579338310 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579103075 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579154370 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579206250 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579242450 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579272323 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.023 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579304160 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579343075 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579389030 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:123 TS:00000002442579455023 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579213005 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579264068 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579316473 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579350915 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579378938 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579411953 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579451313 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579496813 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442579562040 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579326720 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579376968 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.024 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579429185 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579466268 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579494773 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579525823 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579565325 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579612690 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:057 TS:00000002442579680625 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579443010 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579494345 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579545580 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579581145 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579608953 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579641563 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579681038 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.025 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579726733 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:101 TS:00000002442579792753 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579559968 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579609708 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579657783 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579694478 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579723788 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579757355 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579799203 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579850628 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442579923588 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579674433 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579726480 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579780120 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579815800 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.026 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579846893 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579881583 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579922795 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442579972583 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442580040688 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579787200 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579835495 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579887080 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579923213 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579951460 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442579984043 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442580023335 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442580069415 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:132 TS:00000002442580136435 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.027 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442579904805 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442579956298 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442580008740 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442580045223 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442580074150 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442580105945 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442580145710 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442580192475 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:027 TS:00000002442580259453 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580019853 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580069288 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580119633 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580153740 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580182865 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580215808 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.028 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580253533 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580300120 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:074 TS:00000002442580366475 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580131973 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580182303 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580232825 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580268920 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580297778 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580329840 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580367218 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580412995 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:041 TS:00000002442580482523 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580247733 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580298695 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580350470 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.029 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580386903 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580415863 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580447740 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580486823 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580532743 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:059 TS:00000002442580599175 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580364728 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580413653 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580464313 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580499928 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580529830 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580561760 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580601515 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.030 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580649128 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442580717580 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580481748 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580531478 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580582395 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580618298 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580646273 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580678395 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580717360 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580762558 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442580829518 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580591593 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580642213 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580694020 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580728580 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.031 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580756725 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580789623 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580829510 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580874878 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:062 TS:00000002442580941133 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580710760 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580761910 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580814493 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580850340 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580877885 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580907868 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580948755 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442580995688 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:056 TS:00000002442581062860 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.032 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442580821660 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442580870898 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442580920548 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442580955540 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442580985633 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442581018535 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442581056875 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442581104388 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:015 TS:00000002442581172990 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442580937973 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442580986460 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442581036995 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442581071468 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442581101643 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.033 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442581135980 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442581173690 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442581220233 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:042 TS:00000002442581286985 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581055675 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581104860 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581154130 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581189338 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581217010 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581247948 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581286953 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581333173 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:151 TS:00000002442581403415 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581173333 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.034 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581224495 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581277190 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581313703 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581342930 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581375705 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581415598 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581460540 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442581526580 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581285950 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581335555 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581386445 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581422910 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581451183 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581484220 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581524438 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.035 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581570355 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:095 TS:00000002442581636593 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581400573 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581451218 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581502928 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581539963 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581569353 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581602125 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581643270 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581690325 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:061 TS:00000002442581754938 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581513625 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581562225 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581612770 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581648048 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.036 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581677113 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581708708 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581747940 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581795308 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442581863205 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581630178 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581679570 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581727398 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581762825 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581790353 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581821083 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581860503 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581908928 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:077 TS:00000002442581976373 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.037 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442581743403 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442581795023 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442581845103 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442581879555 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442581908045 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442581940403 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442581978755 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442582025258 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:014 TS:00000002442582093023 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442581861255 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442581912938 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442581963573 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442581998308 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442582026638 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442582058788 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.038 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442582096503 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442582142318 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:110 TS:00000002442582210208 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442581975673 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582026293 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582078000 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582112928 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582141368 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582173763 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582212175 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582259893 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:070 TS:00000002442582330563 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582090150 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582138570 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582189260 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.039 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582225408 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582253588 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582286275 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582325943 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582371393 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:031 TS:00000002442582437085 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582206568 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582258605 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582313850 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582351585 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582380288 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582413338 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582452883 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582498350 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.040 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:069 TS:00000002442582564073 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582320268 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582370313 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582418693 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582452945 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582480743 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582511733 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582552038 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582599470 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:149 TS:00000002442582667058 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582434638 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582485558 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582537843 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582573840 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582601580 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.041 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582631423 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582672408 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582719688 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:088 TS:00000002442582786688 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582548450 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582597113 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582647150 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582682735 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582711665 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582744698 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582782513 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582827290 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442582893370 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.042 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582663483 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582713165 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582764188 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582799965 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582827635 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582860023 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582899793 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442582945645 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:037 TS:00000002442583011398 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442582777693 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442582827680 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442582879660 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442582915075 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442582943223 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442582975108 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.043 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442583014000 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442583059115 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:122 TS:00000002442583125408 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442582901130 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442582950600 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442583004050 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442583040728 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442583069800 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442583102725 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442583144295 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442583192505 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:124 TS:00000002442583261353 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583010918 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583059043 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.044 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583108838 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583144555 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583172548 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583204668 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583244220 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583289058 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:159 TS:00000002442583354633 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583127378 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583178250 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583228220 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583262675 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583290438 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583320578 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583359975 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.045 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583406200 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:114 TS:00000002442583474928 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583238943 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583288493 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583339810 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583376113 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583404135 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583437053 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583476978 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583522880 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:004 TS:00000002442583590433 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583353348 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583403433 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583454300 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583488805 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.046 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583516858 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583550650 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583588695 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583633550 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:065 TS:00000002442583699565 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583469813 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583521248 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583573003 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583608228 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583636715 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583669325 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583706708 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583751968 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:102 TS:00000002442583816488 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583582625 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583631953 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.047 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583682915 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583717893 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583745973 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583776398 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583815185 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583860558 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:113 TS:00000002442583928020 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583702038 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583754798 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583807900 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583844635 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583876450 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583910895 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583950045 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442583997438 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.048 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:011 TS:00000002442584066865 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442583813210 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442583862970 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442583912793 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442583947913 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442583976463 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442584008718 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442584046410 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442584091935 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:046 TS:00000002442584159488 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442583928463 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442583977195 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584027833 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584063583 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584091283 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.049 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584123218 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584162105 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584207545 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584274653 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584045280 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584096858 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584147070 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584181643 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584209753 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584240223 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584279978 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584326260 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:050 TS:00000002442584395480 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584159463 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584209623 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.050 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584260310 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584294658 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584322338 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584352933 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584391763 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584437015 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:145 TS:00000002442584504560 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584277150 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584328078 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584378555 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584413913 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584444250 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584476953 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584515740 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584562478 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:043 TS:00000002442584630748 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.051 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584392188 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584444545 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584496663 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584531535 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584560865 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584594003 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584633205 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584680025 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:003 TS:00000002442584749348 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584506765 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584555703 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584605398 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584640153 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584667583 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584698255 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.052 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584738855 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584786223 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:148 TS:00000002442584854550 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584618210 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584667598 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584716233 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584751825 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584779595 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584810520 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584850073 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584898580 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442584966485 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442584738075 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442584788715 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442584839123 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442584875285 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.053 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442584904218 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442584936905 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442584975683 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585022043 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585092270 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584848378 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584896675 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584947805 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442584983903 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442585011468 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442585043680 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442585082478 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442585127893 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:068 TS:00000002442585194758 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442584970130 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.054 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585022300 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585074530 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585109785 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585137360 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585167355 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585207680 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585254045 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:120 TS:00000002442585320720 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585078413 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585127700 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585175785 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585211340 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585239200 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585270258 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585309730 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.055 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585358220 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:045 TS:00000002442585426160 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585196835 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585247740 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585299710 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585337053 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585366805 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585399483 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585441000 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585488220 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:093 TS:00000002442585553525 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585313205 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585363565 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585411763 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585447853 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585476585 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.056 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585508908 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585549503 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585598590 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:013 TS:00000002442585667190 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585424663 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585474185 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585524803 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585561465 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585590463 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585623125 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585661003 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585707260 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:009 TS:00000002442585775225 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585547148 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585599115 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.057 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585650495 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585685308 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585714525 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585747740 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585786745 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585833093 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:131 TS:00000002442585903160 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585658348 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585708228 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585758313 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585794088 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585823113 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585855390 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585892520 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442585938840 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.058 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:137 TS:00000002442586006250 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442585769348 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442585817920 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442585868173 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442585903693 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442585932530 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442585965728 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442586003698 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442586048790 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:040 TS:00000002442586114543 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442585885358 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442585933765 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442585984235 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442586019665 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442586048703 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442586080663 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.059 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442586119925 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key: 258 (hash_value: 2451)
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442586167765 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: key 258, nexthop sf_sff_id 0, node_type 0, encap_type 0, node_ip 0.0.0.0, oce 0x0, sf_sff_node 0x8c03bb60
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:048 TS:00000002442586236128 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Rcvd path_id 1, index 2, nexthop: 0.0.0.0, 0x0
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:021 TS:00000002442586003103 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_flow_find_or_add , create = 0
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:021 TS:00000002442586054848 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found or created Flow ID = 0x8d41c1f0
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:021 TS:00000002442586104783 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): In svc_chain_add_or_get_flow_info, create = 0
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:021 TS:00000002442586140215 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Found ms info
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:021 TS:00000002442586169408 :PKT:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): Flow Action/Classify L3 Input FORWARD
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:021 TS:00000002442586201850 :CONFIG:[11.222.10.8] 80 => [31.222.40.8] 44022 6 (0): SCHAIN UCODE: lookup nexthop svc_path_id 1, index id 2
+09/11 15:18:13.060 [cpp-dp-service_chain]: [8951]: (info): QFP:0.0 Thread:02

@@ -1,0 +1,33 @@
+import numpy as np
+from scipy.stats import ttest_ind
+
+step_len = 1
+sample_len = 3
+try:
+    with open('data.txt') as f:
+        lines = f.read().splitlines()
+        line =[]
+        for x in lines:
+            if x != 'null':
+                line.append(float(x))
+except IOError:
+    print ('No such file exist')
+    exit
+x = np.array(line)
+y_total = x.astype(float)
+y1=y_total[-sample_len:]
+start_point = 0
+drop_counter = 0
+for start_point in range(0,len(y_total-sample_len-1),sample_len):
+    y=y_total[start_point:start_point+sample_len]
+    if len(y) == sample_len:
+        #print ("y",y)
+        #print ("y1",y1)
+        t, p = ttest_ind(y, y1, equal_var=False)
+        print ("ttest_ind: t = %f  p = %f", t, p)
+        if p < 0.01 :
+            drop_counter += 1
+            print ("drop happened")
+    y1 = y
+if drop_counter > 0:
+    print( "there are drops", drop_counter,"times" )

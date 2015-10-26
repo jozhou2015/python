@@ -1,0 +1,6 @@
+class RW(object):
+    def reve(s):
+        return ' '.join([word[::-1] for word in s[::-1].split()])
+
+lt=RW.reve('this is a wonderful world')
+print (lt)

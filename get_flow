@@ -1,0 +1,113 @@
+import requests
+import json
+import re
+from bs4 import BeautifulSoup
+import time
+
+URL1 = 'http://www.google.com/finance/getprices?q='
+URL2 = '&i=60&p=1d&f=d,c,v,k,o,h,l&df=cpct&auto=0&ei=Ef6XUYDfCqSTiAKEMg'
+SITE = "http://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+class Flow(object):
+    def __init__(self, q):
+        """
+        Usage:
+        from optionchain import OptionChain
+        oc = OptionChain('NASDAQ:AAPL')
+        # oc.calls
+        # oc.puts
+        """
+        self.params = {
+            'q': q,
+            'output': 'json'
+        }
+        self.put_total=0
+        self.call_total=0
+        self.put_sum=0
+        self.call_sum=0
+
+
+
+    def get_content(self, url, params):
+        response = requests.get(url, params=params)
+        print (url, params)
+        txheaders = { 'User-agent' : "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)" }
+        if response.status_code == 200:
+            content_json = response.content.decode()
+
+        else:
+            params['q'] ="NYSE:" + params['q']
+            response = requests.get(url, params=params, headers=txheaders)
+            print (url, params)
+            if response.status_code == 200:
+                content_json = response.content.decode()
+            else:
+                content_json ="error"
+        content=content_json.split("\n")
+        print (content)
+        for line in content:
+            #print (line)
+            if re.match('^\d+,',line):
+                print(line)
+                content = line.split(",")
+                return content
+
+class scrape(object):
+    def __init__(self, site, q):
+        """
+        Usage:
+        from optionchain import OptionChain
+        oc = OptionChain('NASDAQ:AAPL')
+        # oc.calls
+        # oc.puts
+        """
+        self.params = {
+            'q': q,
+            'output': 'json'
+        }
+
+        self.site=site
+
+    def scrape_list(self, site, params):
+        response = requests.get(site, params=params)
+        if response.status_code == 200:
+            page = response.content
+        soup = BeautifulSoup(page)
+
+        table = soup.find('table', {'class': 'wikitable sortable'})
+        sector_tickers = dict()
+        for row in table.findAll('tr'):
+            col = row.findAll('td')
+            if len(col) > 0:
+                sector = str(col[3].string.strip()).lower().replace(' ', '_')
+                ticker = str(col[0].string.strip())
+                if sector not in sector_tickers:
+                    sector_tickers[sector] = list()
+                sector_tickers[sector].append(ticker)
+        #print (sector_tickers)
+        return sector_tickers
+
+
+
+if __name__ == '__main__':
+    LT=scrape(SITE, json)
+    list =LT.scrape_list(SITE, LT.params)
+    total_puts=0
+    total_calls=0
+    sum_puts=0
+    sum_calls=0
+    for key, value in list.items():
+        for ticker  in value :
+            FLOW_URL=URL1+ticker+URL2
+            oc = Flow(ticker)
+            data = oc.get_content(FLOW_URL, oc.params)
+            time.sleep(2)
+
+            #total_calls += oc.call_total
+            #sum_calls += oc.call_sum
+            #total_puts += oc.put_total
+            #sum_puts += oc.put_sum
+
+    #print ("put counts", total_puts, "call counts", total_calls, "sum of puts",sum_puts, "sum of calls", sum_calls)
+
+
+

@@ -1,0 +1,121 @@
+import requests
+import json
+import locale
+import re
+from bs4 import BeautifulSoup
+
+URL1 = 'http://chartapi.finance.yahoo.com/instrument/1.0/'
+URL2 = '/chartdata;type=quote;range=1d/json'
+SITE = "http://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+class FLOW(object):
+    def __init__(self, q):
+        """
+        Usage:
+        from optionchain import OptionChain
+        oc = OptionChain('NASDAQ:AAPL')
+        # oc.calls
+        # oc.puts
+        """
+        self.params = {
+            'q': q,
+            'output': 'json'
+        }
+        self.up = 0.0
+        self.up_sum = 0.0
+        self.sum = 0.0
+        self.down = 0.0
+        self.down_sum = 0.0
+
+
+
+    def get_content(self, url, params):
+        response = requests.get(url, params=params)
+        #print (url, params)
+        if response.status_code == 200:
+            content_json = response.content.decode()
+            content_json1 = content_json.split(' ', 1)[1]
+            content_json1 = content_json1[:-1]
+            data=json.loads(content_json1)
+            #print(data['series'])
+            pre_close = 0.0
+            pre_sum = 0.0
+            for item in data['series']:
+                #print (item)
+                #print (item['Timestamp'],item['high'],item['volume'])
+                avg = (float(item['close']) + float(item['high']) + float(item['low'])) /3
+                if pre_close == 0.0:
+                    next
+                else:
+                    if  avg> pre_close:
+                        self.up_sum += pre_sum
+                        self.up += 1
+                    else:
+                        self.down_sum += pre_sum
+                        self.down += 1
+                pre_close = avg
+                pre_sum = avg* float(item['volume'])
+            self.sum = self.up_sum - self.down_sum
+        else:
+            data = 0
+        return data
+
+class SCRAPE(object):
+    def __init__(self, site, q):
+        """
+        Usage:
+        from optionchain import OptionChain
+        oc = OptionChain('NASDAQ:AAPL')
+        # oc.calls
+        # oc.puts
+        """
+        self.params = {
+            'q': q,
+            'output': 'json'
+        }
+
+        self.site=site
+
+    def scrape_list(self, site, params):
+        response = requests.get(site, params=params)
+        if response.status_code == 200:
+            page = response.content
+        soup = BeautifulSoup(page)
+
+        table = soup.find('table', {'class': 'wikitable sortable'})
+        sector_tickers = dict()
+        for row in table.findAll('tr'):
+            col = row.findAll('td')
+            if len(col) > 0:
+                sector = str(col[3].string.strip()).lower().replace(' ', '_')
+                ticker = str(col[0].string.strip()).replace('/','-')
+                if sector not in sector_tickers:
+                    sector_tickers[sector] = list()
+                sector_tickers[sector].append(ticker)
+        #print (sector_tickers)
+        return sector_tickers
+
+
+
+if __name__ == '__main__':
+    LT=SCRAPE(SITE, json)
+    list =LT.scrape_list(SITE, LT.params)
+    total_up=0
+    total_down=0
+    sum1=0.0
+    for key, value in list.items():
+        for ticker  in value  :
+            FLOW_URL=URL1+ticker+URL2
+            oc = FLOW(ticker)
+            data = oc.get_content(FLOW_URL, oc.params)
+            print (ticker, oc.up_sum, oc.up, oc.down_sum, oc.down, oc.sum)
+            sum1+=oc.sum
+            if oc.sum > 0 :
+                total_up+=1
+            else:
+                total_down+=1
+
+    sum1='${:,.2f}'.format(sum1)
+    #print ("total=",${:,.2f sum)sum1
+    print ("up=", total_up, "down=",total_down, "total=", sum1)
+
+

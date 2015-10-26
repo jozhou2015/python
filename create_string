@@ -1,0 +1,2 @@
+a = "".join([str(x) for x in range(100)])
+print (a)
